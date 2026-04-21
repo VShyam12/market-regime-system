@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import mlflow
+import mlflow.pytorch
 from torch.utils.data import DataLoader, Dataset
 
 from data.labels import align_labels_with_features, load_labels
@@ -134,6 +136,29 @@ def train_lstm(
     """Train the RegimeLSTM model and return training history."""
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
+    mlflow_enabled = False
+    try:
+        mlflow.set_tracking_uri("sqlite:///mlflow.db")
+        mlflow.set_experiment("market-regime-lstm")
+        mlflow.start_run(run_name="lstm_training")
+        weight_decay = 1e-4
+        mlflow.log_params(
+            {
+                "learning_rate": learning_rate,
+                "batch_size": batch_size,
+                "num_epochs": num_epochs,
+                "hidden_size": 64,
+                "dropout": 0.5,
+                "weight_decay": weight_decay,
+                "optimizer": "Adam",
+                "early_stopping_patience": 10,
+            }
+        )
+        mlflow_enabled = True
+    except Exception as exc:
+        print(f"MLflow setup failed, continuing without tracking: {exc}")
+        weight_decay = 1e-4
+
     splits = load_splits(processed_dir)
     labels = load_labels(labels_dir)
 
@@ -177,7 +202,7 @@ def train_lstm(
 
     class_weights = compute_class_weights(y_train).to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
         mode="min",
@@ -250,6 +275,22 @@ def train_lstm(
         )
         print(f"Learning rate: {current_lr:.8f}")
 
+        if mlflow_enabled:
+            try:
+                mlflow.log_metrics(
+                    {
+                        "train_loss": train_loss,
+                        "train_acc": train_acc,
+                        "val_loss": val_loss,
+                        "val_acc": val_acc,
+                        "learning_rate": current_lr,
+                    },
+                    step=epoch,
+                )
+            except Exception as exc:
+                print(f"MLflow epoch logging failed, continuing training: {exc}")
+                mlflow_enabled = False
+
         if epochs_without_improvement >= early_stopping_patience:
             print(f"Early stopping triggered at epoch {epoch + 1}")
             break
@@ -280,6 +321,21 @@ def train_lstm(
     with history_path.open("w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
     print(f"Training history saved to {history_path}")
+
+    if mlflow_enabled:
+        try:
+            mlflow.log_metric("test_accuracy", test_acc)
+            mlflow.log_metric("test_loss", test_loss)
+            mlflow.log_metric("best_val_acc", best_val_acc)
+            mlflow.log_artifact(str(checkpoint_dir / "lstm_best.pt"))
+            mlflow.log_artifact(str(checkpoint_dir / "training_history.json"))
+            mlflow.end_run()
+        except Exception as exc:
+            print(f"MLflow final logging failed, continuing normally: {exc}")
+            try:
+                mlflow.end_run()
+            except Exception:
+                pass
 
     return history
 
