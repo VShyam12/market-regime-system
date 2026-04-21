@@ -18,11 +18,11 @@ class RegimeLSTM(nn.Module):
     def __init__(
         self,
         input_size: int = 50,
-        hidden_size: int = 128,
+        hidden_size: int = 64,
         num_layers: int = 2,
         num_classes: int = 3,
-        dropout: float = 0.3,
-        embedding_dim: int = 128,
+        dropout: float = 0.5,
+        embedding_dim: int = 64,
     ) -> None:
         super().__init__()
 
@@ -43,17 +43,18 @@ class RegimeLSTM(nn.Module):
 
         self.lstm2 = nn.LSTM(
             input_size=hidden_size * 2,
-            hidden_size=hidden_size // 2,
+            hidden_size=hidden_size,
             num_layers=1,
             batch_first=True,
             bidirectional=True,
         )
 
         self.dropout = nn.Dropout(dropout)
-        self.layer_norm = nn.LayerNorm(hidden_size)
+        self.dropout2 = nn.Dropout(0.5)
+        self.layer_norm = nn.LayerNorm(hidden_size * 2)
 
         self.embedding_projection = nn.Sequential(
-            nn.Linear(hidden_size, embedding_dim),
+            nn.Linear(hidden_size * 2, embedding_dim),
             nn.ReLU(),
         )
         self.classifier = nn.Linear(embedding_dim, num_classes)
@@ -73,7 +74,7 @@ class RegimeLSTM(nn.Module):
         out = self.dropout(out)
 
         out, _ = self.lstm2(out)
-        out = self.dropout(out)
+        out = self.dropout2(out)
 
         last_timestep = out[:, -1, :]
         last_timestep = self.layer_norm(last_timestep)
@@ -105,7 +106,7 @@ def get_model(
     print(f"Total parameters: {total_params:,}")
     print(f"Trainable parameters: {trainable_params:,}")
     print(f"Input shape: (batch, 60, {input_size})")
-    print(f"Output shapes: logits (batch, {num_classes}), embedding (batch, 128)")
+    print(f"Output shapes: logits (batch, {num_classes}), embedding (batch, 64)")
 
     return model
 
@@ -161,7 +162,7 @@ if __name__ == "__main__":
     print(f"Logits shape: {tuple(logits.shape)}")
     print(f"Embedding shape: {tuple(embedding.shape)}")
 
-    shape_ok = logits.shape == (32, 3) and embedding.shape == (32, 128)
+    shape_ok = logits.shape == (32, 3) and embedding.shape == (32, 64)
     print(f"Output shapes correct: {shape_ok}")
 
     print("\nFull model architecture:")
