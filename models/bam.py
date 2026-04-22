@@ -8,7 +8,6 @@ LSTM embeddings for regime-aware associative retrieval and classification.
 """
 
 from pathlib import Path
-import math
 
 import torch
 import torch.nn as nn
@@ -24,8 +23,8 @@ class HopfieldBAM(nn.Module):
         self,
         embedding_dim: int = 64,
         n_regimes: int = 3,
-        beta: float = 8.0,
-        trainable_prototypes: bool = True,
+        beta: float = 2.0,
+        trainable_prototypes: bool = False,
     ) -> None:
         super().__init__()
 
@@ -35,26 +34,26 @@ class HopfieldBAM(nn.Module):
         self.trainable_prototypes = trainable_prototypes
 
         init_patterns = torch.randn(n_regimes, embedding_dim) * 0.02
-        self.stored_patterns = nn.Parameter(init_patterns, requires_grad=trainable_prototypes)
+        self.stored_patterns = nn.Parameter(init_patterns)
+        if not trainable_prototypes:
+            self.stored_patterns.requires_grad = False
 
         self.beta = nn.Parameter(torch.tensor(float(beta), dtype=torch.float32))
 
-        self.projection = nn.Linear(embedding_dim, embedding_dim)
-        self.proj_norm = nn.LayerNorm(embedding_dim)
-        self.classifier = nn.Linear(embedding_dim, n_regimes)
+        self.classifier = nn.Linear(embedding_dim + n_regimes, n_regimes)
 
     def forward(self, query: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Run query retrieval and return logits, retrieved memory, and attention weights."""
-        projected = self.projection(query)
-        projected = self.proj_norm(projected)
+        query_norm = F.normalize(query, dim=-1)
+        patterns_norm = F.normalize(self.stored_patterns, dim=-1)
+        similarities = query_norm @ patterns_norm.t()
 
-        similarities = self.beta * (projected @ self.stored_patterns.t()) / math.sqrt(self.embedding_dim)
-        weights = F.softmax(similarities, dim=-1)
+        enriched = torch.cat([query, similarities], dim=-1)
+        logits = self.classifier(enriched)
+
+        weights = F.softmax(similarities * self.beta, dim=-1)
 
         retrieved = weights @ self.stored_patterns
-        retrieved = retrieved + projected
-
-        logits = self.classifier(retrieved)
         return logits, retrieved, weights
 
     def initialise_from_prototypes(self, prototypes_path: Path) -> None:

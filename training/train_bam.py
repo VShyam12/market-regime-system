@@ -93,7 +93,7 @@ def train_bam(
     checkpoint_dir: Path = Path("models/checkpoints"),
     num_epochs: int = 40,
     batch_size: int = 32,
-    learning_rate: float = 0.005,
+    learning_rate: float = 0.002,
     device: str = "cpu",
 ) -> dict:
     """Train the BAM head on frozen LSTM embeddings and return history."""
@@ -145,8 +145,19 @@ def train_bam(
         device=device,
     )
 
-    bam_params = model.get_trainable_params()
+    # Train only classification head; keep stored patterns frozen.
+    for param in model.bam.parameters():
+        param.requires_grad = False
+    for param in model.bam.classifier.parameters():
+        param.requires_grad = True
+
+    bam_params = [p for p in model.bam.parameters() if p.requires_grad]
     optimizer = torch.optim.Adam(bam_params, lr=learning_rate)
+
+    print("Training BAM parameters:")
+    for name, param in model.bam.named_parameters():
+        if param.requires_grad:
+            print(f"- {name}: {tuple(param.shape)}")
 
     class_weights = compute_class_weights(y_train).to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
@@ -179,7 +190,7 @@ def train_bam(
                 "learning_rate": learning_rate,
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
-                "beta": 8.0,
+                "beta": 2.0,
             }
         )
         mlflow_enabled = True
