@@ -483,6 +483,22 @@ class MarketRegimePredictor:
             raise RuntimeError(f"Failed to get current regime: {exc}") from exc
 
 
+def get_regime_transitions(predictions: pd.DataFrame) -> pd.DataFrame:
+    """Convenience wrapper to compute regime transitions from predictions.
+
+    Args:
+        predictions: Prediction DataFrame with at least date/regime/regime_id columns.
+
+    Returns:
+        Transition DataFrame with columns: date, from_regime, to_regime, duration_days.
+    """
+    try:
+        helper = MarketRegimePredictor.__new__(MarketRegimePredictor)
+        return MarketRegimePredictor.get_regime_transitions(helper, predictions)
+    except Exception as exc:
+        raise RuntimeError(f"get_regime_transitions failed: {exc}") from exc
+
+
 def run_inference(
     start_date: str = "2024-01-01",
     end_date: str = "2024-12-31",

@@ -1,0 +1,130 @@
+[
+  {
+    "alert_id": "alert_20241220_transition",
+    "alert_type": "transition",
+    "priority": "MEDIUM",
+    "date": "2024-12-20",
+    "title": "Market entering transition phase",
+    "message": "Growth regime ended after 84 days. Market showing signs of uncertainty.",
+    "from_regime": "Growth",
+    "to_regime": "Transition",
+    "confidence": 0.9705814123153687,
+    "vix_level": 18.360000610351562,
+    "duration_days": 84,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240822_transition",
+    "alert_type": "transition",
+    "priority": "LOW",
+    "date": "2024-08-22",
+    "title": "Growth regime confirmed",
+    "message": "Market returned to Growth after 7 days of transition.",
+    "from_regime": "Transition",
+    "to_regime": "Growth",
+    "confidence": 0.7899006009101868,
+    "vix_level": 17.549999237060547,
+    "duration_days": 7,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240813_recovery",
+    "alert_type": "recovery",
+    "priority": "MEDIUM",
+    "date": "2024-08-13",
+    "title": "Panic regime easing",
+    "message": "Market showing signs of stabilisation. Panic lasted 7 days.",
+    "from_regime": "Panic",
+    "to_regime": "Transition",
+    "confidence": 0.9089606404304504,
+    "vix_level": 18.1200008392334,
+    "duration_days": 7,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240813_panic_exit",
+    "alert_type": "panic_exit",
+    "priority": "MEDIUM",
+    "date": "2024-08-13",
+    "title": "Panic period ended",
+    "message": "Panic regime ended on 2024-08-13 after 7 days. Market recovering.",
+    "from_regime": "Panic",
+    "to_regime": "Transition",
+    "confidence": 0.9089606404304504,
+    "vix_level": 18.1200008392334,
+    "duration_days": 7,
+    "metadata": {
+      "panic_end": "2024-08-13"
+    }
+  },
+  {
+    "alert_id": "alert_20240802_panic_entry",
+    "alert_type": "panic_entry",
+    "priority": "HIGH",
+    "date": "2024-08-02",
+    "title": "PANIC REGIME DETECTED",
+    "message": "Market entered Panic regime. VIX elevated. Previous transition lasted 6 days.",
+    "from_regime": "Transition",
+    "to_regime": "Panic",
+    "confidence": 0.7658600803632754,
+    "vix_level": 23.389999389648438,
+    "duration_days": 6,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240725_transition",
+    "alert_type": "transition",
+    "priority": "MEDIUM",
+    "date": "2024-07-25",
+    "title": "Market entering transition phase",
+    "message": "Growth regime ended after 53 days. Market showing signs of uncertainty.",
+    "from_regime": "Growth",
+    "to_regime": "Transition",
+    "confidence": 0.7939003705978394,
+    "vix_level": 18.459999084472656,
+    "duration_days": 53,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240508_transition",
+    "alert_type": "transition",
+    "priority": "LOW",
+    "date": "2024-05-08",
+    "title": "Growth regime confirmed",
+    "message": "Market returned to Growth after 19 days of transition.",
+    "from_regime": "Transition",
+    "to_regime": "Growth",
+    "confidence": 0.8838878870010376,
+    "vix_level": 13.0,
+    "duration_days": 19,
+    "metadata": {
+      "source": "transition"
+    }
+  },
+  {
+    "alert_id": "alert_20240411_transition",
+    "alert_type": "transition",
+    "priority": "MEDIUM",
+    "date": "2024-04-11",
+    "title": "Market entering transition phase",
+    "message": "Growth regime ended after 69 days. Market showing signs of uncertainty.",
+    "from_regime": "Growth",
+    "to_regime": "Transition",
+    "confidence": 0.7666475772857666,
+    "vix_level": 14.90999984741211,
+    "duration_days": 69,
+    "metadata": {
+      "source": "transition"
+    }
+  }
+]
