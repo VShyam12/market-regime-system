@@ -381,9 +381,12 @@ class MarketRegimePredictor:
             if n_days <= 0:
                 raise ValueError("n_days must be a positive integer")
 
-            end_ts = pd.Timestamp(datetime.today().date())
-            trading_days = pd.bdate_range(end=end_ts, periods=n_days)
-            start_ts = trading_days.min()
+            max_data_end = pd.Timestamp("2024-12-31")
+            min_data_start = pd.Timestamp("2024-01-01")
+
+            trading_days = pd.bdate_range(end=max_data_end, periods=n_days)
+            start_ts = max(trading_days.min(), min_data_start)
+            end_ts = max_data_end
 
             predictions = self.predict(
                 start_date=start_ts.strftime("%Y-%m-%d"),
